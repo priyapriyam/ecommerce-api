@@ -41,7 +41,6 @@ export  const registerUser = async (req,res) =>{
                 },
             });
     }catch(error){
-      console.log(error,"...........................")
       return res.status(500).json({
       success: false,
       message: "Server error",
@@ -73,9 +72,6 @@ export const loginUser = async(req,res) =>{
         message: "Invalid email or password",
       });
     }
-    console.log("Entered:", password);
-console.log("DB Hash:", user.password);
-
     // 3. Compare passwords
    const isMatch = await bcrypt.compare(password, user.password);
 
@@ -99,7 +95,6 @@ console.log("DB Hash:", user.password);
     });
 
   } catch (error) {
-    console.log(error,"yyyyyyyyyyyyyyyy")
     return res.status(500).json({
       success: false,
       message: "Server error",

@@ -9,7 +9,6 @@ export const createCart = async (req, res) => {
 
     // 1. Check if product exists
     const product = await Product.findById(productId);
-    console.log(product,"--")
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
