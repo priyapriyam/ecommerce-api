@@ -5,8 +5,6 @@ export const createOrder = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    console.log(userId, "------");
-
     // Get user's cart
     const cart = await Cart.findOne({ user: userId });
 
@@ -42,11 +40,24 @@ export const createOrder = async (req, res) => {
 export const getMyOrders = async (req, res) => {
   try {
     const userId = req.user._id;
-    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalOrders = await Order.countDocuments({ user: userId });
+    const orders = await Order.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(totalOrders / limit);
 
     return res.status(200).json({
       success: true,
-      total: orders.length,
+      totalOrders,
+      page,
+      totalPages,
+      limit,
       orders,
     });
   } catch (error) {
@@ -85,20 +96,31 @@ export const getOrderById = async (req, res) => {
 };
 
 //update order api
-export const updateOrderById = async (res, req) => {
+export const updateOrderById = async (req, res) => {
   try {
     const { status } = req.body;
-
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Status is required",
+      });
+    }
+    if (!["pending", "shipped", "delivered", "cancelled", "returned"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value",
+      });
+    }
     //find  order by id
     const order = await Order.findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order noy found",
+        message: "Order not found",
       });
     }
-    if (order === "delivered") {
+    if (order.status === "delivered") {
       return res.status(400).json({
         success: false,
         message: "Order already delivered",
